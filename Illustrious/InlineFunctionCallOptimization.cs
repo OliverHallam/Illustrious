@@ -4,7 +4,8 @@
 // </copyright>
 // <summary>Defines the InlineFunctionCallOptimization type.</summary>
 //-------------------------------------------------------------------------------------------------
-namespace Inliner
+
+namespace Illustrious
 {
     using System.Collections.Generic;
     using Mono.Cecil;
@@ -13,7 +14,7 @@ namespace Inliner
     /// <summary>
     /// Inlines function calls.
     /// </summary>
-    public class InlineFunctionCallOptimization
+    public class InlineFunctionCallOptimization : Optimization
     {
         /// <summary>
         /// The configuration.
@@ -45,7 +46,7 @@ namespace Inliner
         /// <returns>
         /// <see langword="true"/> if an optimization was performed; otherwise <see langword="false"/>.
         /// </returns>
-        public bool OptimizeInstruction(Optimizer optimizer, CilWorker worker, ref Instruction instruction)
+        public override bool OptimizeInstruction(Optimizer optimizer, CilWorker worker, ref Instruction instruction)
         {
             // TODO: allow local variables in inlined method
             // TODO: allow arguments
@@ -88,6 +89,12 @@ namespace Inliner
                     }
 
                     instruction = instructions[0];
+                    if (instruction.OpCode.FlowControl == FlowControl.Return)
+                    {
+                        instruction = next;
+                        return true;
+                    }
+
                     worker.InsertBefore(next, instruction);
                     for (var i = 1; i < instructionCount; i++)
                     {

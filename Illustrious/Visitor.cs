@@ -4,7 +4,7 @@
 // </copyright>
 //-------------------------------------------------------------------------------------------------
 
-namespace Inliner
+namespace Illustrious
 {
     using Mono.Cecil;
 

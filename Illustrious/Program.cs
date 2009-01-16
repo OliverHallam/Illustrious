@@ -4,7 +4,8 @@
 // </copyright>
 // <summary>Defines the Program type.</summary>
 //-------------------------------------------------------------------------------------------------
-namespace Inliner
+
+namespace Illustrious
 {
     using Mono.Cecil;
 
@@ -25,8 +26,9 @@ namespace Inliner
             var assembly = AssemblyFactory.GetAssembly(assemblyPath);
 
             var configuration = new Configuration();
-            var optimization = new InlineFunctionCallOptimization(configuration);
-            var rewriter = new Optimizer(optimization);
+            var inlineFunctionCall = new InlineFunctionCallOptimization(configuration);
+            var removeNop = new RemoveNopOptimization();
+            var rewriter = new Optimizer(inlineFunctionCall, removeNop);
             rewriter.Visit(assembly);
 
             var assemblyName = assembly.Name.Name;

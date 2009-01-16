@@ -5,7 +5,7 @@
 // <summary>Defines the Configuration type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Inliner
+namespace Illustrious
 {
     using Mono.Cecil;
 
