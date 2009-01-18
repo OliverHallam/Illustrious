@@ -52,6 +52,7 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="InlineFunctionCallOptimization.cs" />
     <Compile Include="Optimization.cs" />
+    <Compile Include="OptimizationWorker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Optimizer.cs" />

@@ -54,42 +54,32 @@ namespace Illustrious
                 return;
             }
 
-            var worker = body.CilWorker;
-            var instruction = body.Instructions[0];
-            while (instruction != null)
+            var worker = new OptimizationWorker(this, body);
+            while (worker.MoveNext())
             {
-                if (this.ApplyOptimizations(worker, ref instruction))
-                {
-                    continue;
-                }
-
-                instruction = instruction.Next;
+                this.ApplyOptimizations(worker);
             }
         }
 
         /// <summary>
         /// Applies all optimizations to the specified instruction.
         /// </summary>
-        /// <param name="worker">The worker.</param>
-        /// <param name="instruction">
-        /// The instruction to be optimized.  Receives the first changed instruction of the optimized version.
-        /// </param>
+        /// <param name="worker">The worker to apply optimizations on.</param>
         /// <returns>
         /// <see langword="true"/> if an optimization was performed; otherwise <see langword="false"/>.
         /// </returns>
-        private bool ApplyOptimizations(CilWorker worker, ref Instruction instruction)
+        private void ApplyOptimizations(OptimizationWorker worker)
         {
             var optimizationCount = this.optimizations.Length;
             for (var i = 0; i < optimizationCount; i++)
             {
                 var optimization = this.optimizations[i];
-                if (optimization.OptimizeInstruction(this, worker, ref instruction))
+                optimization.OptimizeInstruction(worker);
+                if (worker.WasOptimized)
                 {
-                    return true;
+                    return;
                 }
             }
-
-            return false;
         }
     }
 }

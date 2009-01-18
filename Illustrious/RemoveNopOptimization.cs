@@ -17,24 +17,16 @@ namespace Illustrious
         /// <summary>
         /// Performs the optimization starting at the current instruction.
         /// </summary>
-        /// <param name="optimizer">The optimizer calling this method.</param>
-        /// <param name="worker">A CIL worker for the current method.</param>
-        /// <param name="instruction">The instruction to be visited.  Receives the first changed instruction of the optimized version.</param>
-        /// <returns>
-        /// <see langword="true"/> if an optimization was performed; otherwise <see langword="false"/>.
-        /// </returns>
-        public override bool OptimizeInstruction(Optimizer optimizer, CilWorker worker, ref Instruction instruction)
+        /// <param name="worker">The worker for optimization actions.</param>
+        public override void OptimizeInstruction(OptimizationWorker worker)
         {
+            var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
             if (opCode.Code == Code.Nop)
             {
-                var next = instruction.Next;
-                worker.Remove(instruction);
-                instruction = next;
-                return true;
+                worker.DeleteInstruction();
             }
-
-            return false;
         }
     }
 }
+
