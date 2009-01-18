@@ -26,9 +26,12 @@ namespace Illustrious
             var assembly = AssemblyFactory.GetAssembly(assemblyPath);
 
             var configuration = new Configuration();
+
             var inlineFunctionCall = new InlineFunctionCallOptimization(configuration);
+            var removeDegenerateBranch = new RemoveDegenerateBranchOptimization();
             var removeNop = new RemoveNopOptimization();
-            var rewriter = new Optimizer(inlineFunctionCall, removeNop);
+
+            var rewriter = new Optimizer(inlineFunctionCall, removeDegenerateBranch, removeNop);
             rewriter.Visit(assembly);
 
             var assemblyName = assembly.Name.Name;
