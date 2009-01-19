@@ -22,6 +22,9 @@ namespace Illustrious
         public bool ShouldInline(MethodDefinition method)
         {
             // TODO: refine these conditions.
+
+            // TODO: prevent inlining if method has too many locals(!)
+
             var returnType = method.ReturnType;
             if (!(returnType.ReturnType.FullName == "System.Void"))
             {
@@ -44,10 +47,12 @@ namespace Illustrious
                 return false;
             }
 
+            /*
             if (body.CodeSize > 32)
             {
                 return false;
             }
+            */
 
             return true;
         }

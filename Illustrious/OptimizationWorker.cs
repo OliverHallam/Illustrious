@@ -95,6 +95,18 @@ namespace Illustrious
                 return this.methodBody.CilWorker;
             }
         }
+        
+        /// <summary>
+        /// Gets the number of local variables used in the method.
+        /// </summary>
+        /// <value>The number of local variables used in the method.</value>
+        public int LocalVariableCount
+        {
+            get
+            {
+                return this.methodBody.Variables.Count;
+            }
+        }
 
         /// <summary>
         /// Gets a value indicating whether any rewritings were performed since the last call to <see cref="NextInstruction"/>.
@@ -124,6 +136,16 @@ namespace Illustrious
 
                 return this.branchSources;
             }
+        }
+
+        /// <summary>
+        /// Adds a local variable to the current method.
+        /// </summary>
+        /// <param name="definition">The definition of the new local variable.</param>
+        public void AddLocalVariable(VariableDefinition definition)
+        {
+            var variables = this.methodBody.Variables;
+            variables.Add(definition);
         }
 
         /// <summary>
@@ -176,6 +198,7 @@ namespace Illustrious
 
                     for (int i = 0; i < branchesLength; i++)
                     {
+                        // TODO: ensure that Br_S instructions get changed to Br if nescassary
                         branches[i].Operand = newTarget;
                     }
 
@@ -204,7 +227,9 @@ namespace Illustrious
         public void InsertInstruction(Instruction instruction)
         {
             if (this.nextInstruction == null)
+            {
                 throw new NotImplementedException("inserting to the end of a stream");
+            }
 
             this.CilWorker.InsertBefore(this.nextInstruction, instruction);
             

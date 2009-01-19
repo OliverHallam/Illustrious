@@ -65,9 +65,6 @@ namespace Illustrious
         /// Applies all optimizations to the specified instruction.
         /// </summary>
         /// <param name="worker">The worker to apply optimizations on.</param>
-        /// <returns>
-        /// <see langword="true"/> if an optimization was performed; otherwise <see langword="false"/>.
-        /// </returns>
         private void ApplyOptimizations(OptimizationWorker worker)
         {
             var optimizationCount = this.optimizations.Length;

@@ -41,70 +41,114 @@ namespace Illustrious
         /// <param name="worker">The worker for optimization actions.</param>
         public override void OptimizeInstruction(OptimizationWorker worker)
         {
-            // TODO: allow local variables in inlined method
             // TODO: allow arguments
             // TODO: allow return values
             // TODO: allow generic methods
             // TODO: allow non-static methods
-            // TODO: ensure that Br_S instructions before an inlined function are patched up appropriately.
             var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
-            if (opCode.FlowControl == FlowControl.Call)
+            if (opCode.FlowControl != FlowControl.Call)
             {
-                var methodRef = (MethodReference) instruction.Operand;
-                var typeRef = methodRef.DeclaringType;
-                var module = typeRef.Module;
+                return;
+            }
 
-                var type = module.Types[typeRef.FullName];
-                if (type == null)
+            var methodRef = (MethodReference) instruction.Operand;
+            var typeRef = methodRef.DeclaringType;
+            var module = typeRef.Module;
+
+            var type = module.Types[typeRef.FullName];
+            if (type == null)
+            {
+                return;
+            }
+
+            var method = type.Methods.GetMethod(methodRef.Name, methodRef.Parameters);
+            bool shouldInlineMethod;
+            if (!this.shouldInline.TryGetValue(method, out shouldInlineMethod))
+            {
+                shouldInlineMethod = this.configuration.ShouldInline(method);
+                this.shouldInline[method] = shouldInlineMethod;
+            }
+
+            if (shouldInlineMethod)
+            {
+                InlineMethod(worker, method);
+            }
+        }
+
+        /// <summary>
+        /// Inlines the supplied method.
+        /// </summary>
+        /// <param name="worker">The worker to use to modify the caller, positioned at the call instruction.</param>
+        /// <param name="method">The method to inline.</param>
+        private static void InlineMethod(OptimizationWorker worker, MethodDefinition method)
+        {
+            // TODO: patch up copied br instructions.
+            worker.Optimize(method);
+            worker.DeleteInstruction();
+
+            var instructions = method.Body.Instructions;
+            var instructionCount = instructions.Count;
+            if (instructionCount == 0)
+            {
+                return;
+            }
+
+            var instruction = instructions[0];
+            if (instruction.OpCode.FlowControl == FlowControl.Return)
+            {
+                return;
+            }
+
+            // Create local variables to be used by the inlined function
+            var variables = method.Body.Variables;
+            for (var i = 0; i < variables.Count; i++)
+            {
+                var variable = variables[i];
+                worker.AddLocalVariable(variable);
+            }
+
+            worker.InsertInstruction(instruction);
+            for (var i = 1; i < instructionCount; i++)
+            {
+                var currentInstruction = instructions[i];
+
+                int location;
+                if (currentInstruction.OpCode.FlowControl == FlowControl.Return)
                 {
-                    return;
+                    // return instructions now just move execution to the instruction after the call
+                    
+                    // TODO: create best form of br instruction
+                    var branch = worker.CilWorker.Create(OpCodes.Br, worker.NextInstruction);
+                    worker.InsertInstruction(branch);
                 }
-
-                var method = type.Methods.GetMethod(methodRef.Name, methodRef.Parameters);
-                bool shouldInlineMethod;
-                if (!this.shouldInline.TryGetValue(method, out shouldInlineMethod))
+                else if (currentInstruction.IsLdloc(out location))
                 {
-                    shouldInlineMethod = this.configuration.ShouldInline(method);
-                    this.shouldInline[method] = shouldInlineMethod;
+                    var variable = variables[location];
+
+                    // TODO: create the best form of ldloc instruction
+                    var ldloc = worker.CilWorker.Create(OpCodes.Ldloc, variable);
+                    worker.InsertInstruction(ldloc);
                 }
-
-                if (shouldInlineMethod)
+                else if (currentInstruction.IsLdloca(out location))
                 {
-                    worker.Optimize(method);
+                    var variable = variables[location];
 
-                    worker.DeleteInstruction();
+                    // TODO: create the best form of ldloca instruction
+                    var ldloca = worker.CilWorker.Create(OpCodes.Ldloca, variable);
+                    worker.InsertInstruction(ldloca);
+                }
+                else if (currentInstruction.IsStloc(out location))
+                {
+                    var variable = variables[location];
 
-                    var instructions = method.Body.Instructions;
-                    var instructionCount = instructions.Count;
-                    if (instructionCount == 0)
-                    {
-                        return;
-                    }
-
-                    instruction = instructions[0];
-                    if (instruction.OpCode.FlowControl == FlowControl.Return)
-                    {
-                        return;
-                    }
-
-                    worker.InsertInstruction(instruction);
-                    for (var i = 1; i < instructionCount; i++)
-                    {
-                        var currentInstruction = instructions[i];
-
-                        if (currentInstruction.OpCode.FlowControl == FlowControl.Return)
-                        {
-                            // return instructions now just move execution to the instruction after the call
-                            var cilWorker = worker.CilWorker;
-                            var branch = cilWorker.Create(OpCodes.Br, worker.NextInstruction);
-                            worker.InsertInstruction(branch);
-                        }
-                        else
-                        {
-                            worker.InsertInstruction(currentInstruction);
-                        }
-                    }
+                    // TODO: create the best form of ldloca instruction
+                    var stloc = worker.CilWorker.Create(OpCodes.Stloc, variable);
+                    worker.InsertInstruction(stloc);
+                }
+                else
+                {
+                    worker.InsertInstruction(currentInstruction);
                 }
             }
         }

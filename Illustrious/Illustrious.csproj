@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Configuration.cs" />
     <Compile Include="InlineFunctionCallOptimization.cs" />
+    <Compile Include="InstructionExtensions.cs" />
     <Compile Include="Optimization.cs" />
     <Compile Include="OptimizationWorker.cs" />
     <Compile Include="Program.cs" />
