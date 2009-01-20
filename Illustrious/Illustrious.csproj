@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BranchCollection.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="InlineFunctionCallOptimization.cs" />
     <Compile Include="InstructionExtensions.cs" />

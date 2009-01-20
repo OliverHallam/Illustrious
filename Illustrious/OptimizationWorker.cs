@@ -8,7 +8,6 @@
 namespace Illustrious
 {
     using System;
-    using System.Collections.Generic;
     using Mono.Cecil;
     using Mono.Cecil.Cil;
 
@@ -43,10 +42,10 @@ namespace Illustrious
         private Instruction targetInstruction;
 
         /// <summary>
-        /// A dictionary of the targets of all the branch instructions in the method.
+        /// The branches in the current method.
         /// </summary>
-        private Dictionary<Instruction, List<Instruction>> branchSources;
-        
+        private BranchCollection branches;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OptimizationWorker"/> class.
         /// </summary>
@@ -125,16 +124,16 @@ namespace Illustrious
         /// Gets the branch sources.
         /// </summary>
         /// <value>The branch sources.</value>
-        private Dictionary<Instruction, List<Instruction>> BranchSources
+        private BranchCollection Branches
         {
             get
             {
-                if (this.branchSources == null)
+                if (this.branches == null)
                 {
                     this.FindBranches();
                 }
 
-                return this.branchSources;
+                return this.branches;
             }
         }
 
@@ -149,8 +148,89 @@ namespace Illustrious
         }
 
         /// <summary>
+        /// Copies an instruction from another instruction.
+        /// </summary>
+        /// <param name="instruction">The instruction to copy.</param>
+        /// <returns>A copy of <paramref name="instruction"/>.</returns>
+        public Instruction CopyInstruction(Instruction instruction)
+        {
+            var opCode = instruction.OpCode;
+            var operand = instruction.Operand;
+            switch (opCode.OperandType)
+            {
+                case OperandType.InlineNone:
+                    return this.CilWorker.Create(opCode);
+
+                case OperandType.InlineType:
+                    return this.CilWorker.Create(opCode, (TypeReference) operand);
+
+                case OperandType.InlineMethod:
+                    return this.CilWorker.Create(opCode, (MethodReference) operand);
+
+                case OperandType.InlineField:
+                    return this.CilWorker.Create(opCode, (FieldReference) operand);
+
+                case OperandType.InlineParam:
+                case OperandType.ShortInlineParam:
+                    return this.CilWorker.Create(opCode, (ParameterDefinition) operand);
+                
+                case OperandType.InlineVar:
+                case OperandType.ShortInlineVar:
+                    return this.CilWorker.Create(opCode, (VariableDefinition) operand);
+
+                case OperandType.InlineTok:
+                    var typeReference = operand as TypeReference;
+                    if (typeReference != null)
+                    {
+                        return this.CilWorker.Create(opCode, typeReference);
+                    }
+
+                    var methodReference = operand as MethodReference;
+                    if (methodReference != null)
+                    {
+                        return this.CilWorker.Create(opCode, methodReference);
+                    }
+
+                    return this.CilWorker.Create(opCode, (FieldReference)operand);
+
+                case OperandType.InlineBrTarget:
+                case OperandType.ShortInlineBrTarget:
+                    return this.CilWorker.Create(opCode, (Instruction)operand);
+
+                case OperandType.InlineSwitch:
+                    return this.CilWorker.Create(opCode, (Instruction[])operand);
+
+                case OperandType.ShortInlineI:
+                    return this.CilWorker.Create(opCode, (sbyte) operand);
+                
+                case OperandType.InlineI:
+                    return this.CilWorker.Create(opCode, (int) operand);
+
+                case OperandType.InlineI8:
+                    return this.CilWorker.Create(opCode, (long) operand);
+
+                case OperandType.ShortInlineR:
+                    return this.CilWorker.Create(opCode, (float)operand);
+
+                case OperandType.InlineR:
+                    return this.CilWorker.Create(opCode, (double) operand);
+
+                case OperandType.InlineString:
+                    return this.CilWorker.Create(opCode, (string)operand);
+
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+
+        /// <summary>
         /// Deletes the current instruction
         /// </summary>
+        /// <exception cref="NotSupportedException">The worker has no current instruction.</exception>
+        /// <remarks>
+        /// Any branch or conditional branch instructions targeting the current instruction will be modified
+        /// to target the instruction following it.
+        /// </remarks>
         public void DeleteInstruction()
         {
             if (this.currentInstruction == null)
@@ -158,6 +238,7 @@ namespace Illustrious
                 throw new NotSupportedException();
             }
 
+            // TODO: should this be target instruction?
             this.DeleteInstruction(this.currentInstruction);
         }
 
@@ -165,6 +246,11 @@ namespace Illustrious
         /// Deletes an instruction.
         /// </summary>
         /// <param name="instruction">The instruction.</param>
+        /// <exception cref="ArgumentNullException"><c>instruction</c> is null.</exception>
+        /// <remarks>
+        /// Any branch or conditional branch instructions targeting <paramref name="instruction" /> will be modified
+        /// to target the instruction following it.
+        /// </remarks>
         public void DeleteInstruction(Instruction instruction)
         {
             if (instruction == null)
@@ -182,42 +268,85 @@ namespace Illustrious
                 this.currentInstruction = this.currentInstruction.Previous;
             }
 
-            List<Instruction> branches;
-            if (this.BranchSources.TryGetValue(instruction, out branches))
+            if (instruction.OpCode.FlowControl == FlowControl.Branch ||
+                instruction.OpCode.FlowControl == FlowControl.Cond_Branch)
             {
-                var branchesLength = branches.Count;
-                if (branchesLength > 0)
-                {
-                    var followingInstruction = instruction.Next;
-                    if (followingInstruction == null)
-                    {
-                        throw new NotImplementedException("Convert branch to ret.");
-                    }
-
-                    var newTarget = instruction.Next;
-
-                    for (int i = 0; i < branchesLength; i++)
-                    {
-                        // TODO: ensure that Br_S instructions get changed to Br if nescassary
-                        branches[i].Operand = newTarget;
-                    }
-
-                    // now update the cache to reflect changes.
-                    List<Instruction> newTargetBranches;
-                    if (this.BranchSources.TryGetValue(newTarget, out newTargetBranches))
-                    {
-                        newTargetBranches.AddRange(branches);
-                    }
-                    else
-                    {
-                        this.BranchSources[newTarget] = branches;
-                    }
-
-                    this.BranchSources.Remove(instruction);
-                }
+                this.Branches.Remove(instruction);
             }
 
+            var followingInstruction = instruction.Next;
+            if (followingInstruction == null)
+            {
+                throw new NotImplementedException("Convert branch to ret.");
+            }
+
+            this.Branches.Retarget(instruction, followingInstruction);
+
             this.CilWorker.Remove(instruction);
+        }
+
+        /// <summary>
+        /// Replaces the current instruction with the given instruction.
+        /// </summary>
+        /// <param name="replacement">The replacement.</param>
+        /// <exception cref="NotSupportedException">The worker has no current instruction.</exception>
+        /// <remarks>
+        /// Any branch or conditional branch instructions targeting the current instruction will be modified
+        /// to target <c>replacement</c>.
+        /// </remarks>
+        public void ReplaceInstruction(Instruction replacement)
+        {
+            if (this.currentInstruction == null)
+            {
+                throw new NotSupportedException();
+            }
+            
+            // TODO: should this be target instruction?
+            this.ReplaceInstruction(this.currentInstruction, replacement);
+        }
+
+        /// <summary>
+        /// Replaces the given instruction with another instruction.
+        /// </summary>
+        /// <param name="instruction">The instruction to replace</param>
+        /// <param name="replacement">The replacement.</param>
+        /// <exception cref="ArgumentNullException"><c>instruction</c> or <c>replacement</c> are null.</exception>
+        /// <remarks>
+        /// Any branch or conditional branch instructions targeting <paramref name="instruction" /> will be modified
+        /// to target <c>replacement</c>.
+        /// </remarks>
+        public void ReplaceInstruction(Instruction instruction, Instruction replacement)
+        {
+            if (instruction == null)
+            {
+                throw new ArgumentNullException("instruction");
+            }
+
+            if (instruction == this.nextInstruction)
+            {
+                this.nextInstruction = this.nextInstruction.Next;
+            }
+
+            if (instruction == this.currentInstruction)
+            {
+                this.currentInstruction = this.currentInstruction.Previous;
+            }
+
+            if (instruction.OpCode.FlowControl == FlowControl.Branch ||
+                instruction.OpCode.FlowControl == FlowControl.Cond_Branch)
+            {
+                this.Branches.Remove(instruction);
+            }
+
+            this.Branches.Retarget(instruction, replacement);
+
+            if (replacement.OpCode.FlowControl == FlowControl.Branch ||
+                replacement.OpCode.FlowControl == FlowControl.Cond_Branch)
+            {
+                this.branches.Add(replacement);
+            }
+
+            this.CilWorker.Replace(instruction, replacement);
         }
 
         /// <summary>
@@ -231,17 +360,25 @@ namespace Illustrious
                 throw new NotImplementedException("inserting to the end of a stream");
             }
 
-            this.CilWorker.InsertBefore(this.nextInstruction, instruction);
-            
             // if we are adding a branch instruction then update our cache.
             var opCode = instruction.OpCode;
             if (opCode.FlowControl == FlowControl.Branch || opCode.FlowControl == FlowControl.Cond_Branch)
             {
-                if (this.branchSources != null)
-                {
-                    this.AddBranch(instruction);
-                }
+                this.Branches.Add(instruction);
             }
+            
+            this.CilWorker.InsertBefore(this.nextInstruction, instruction);
+        }
+
+        /// <summary>
+        /// Modifies any branch instruction in the method which targets a particular instruction to
+        /// target another instruction instead.
+        /// </summary>
+        /// <param name="oldTarget">The old target.</param>
+        /// <param name="newTarget">The new target.</param>
+        public void RetargetBranches(Instruction oldTarget, Instruction newTarget)
+        {
+            this.Branches.Retarget(oldTarget, newTarget);
         }
 
         /// <summary>
@@ -289,38 +426,12 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Adds as branch to the branch index.
-        /// </summary>
-        /// <param name="instruction">The branch instruction.</param>
-        private void AddBranch(Instruction instruction)
-        {
-            var opCode = instruction.OpCode;
-            if (opCode.OperandType != OperandType.InlineBrTarget &&
-                opCode.OperandType != OperandType.ShortInlineBrTarget)
-            {
-                throw new NotImplementedException();
-            }
-
-            var target = (Instruction)instruction.Operand;
-            List<Instruction> branches;
-            if (this.branchSources.TryGetValue(target, out branches))
-            {
-                branches.Add(instruction);
-            }
-            else
-            {
-                branches = new List<Instruction> { instruction };
-                this.branchSources[target] = branches;
-            }
-        }
-
-        /// <summary>
         /// Initializes the branch sources map.
         /// </summary>
         private void FindBranches()
         {
-            this.branchSources = new Dictionary<Instruction, List<Instruction>>();
-
+            this.branches = new BranchCollection();
+            
             var instructions = this.methodBody.Instructions;
             var instructionCount = instructions.Count;
             for (var i = 0; i < instructionCount; i++)
@@ -329,7 +440,7 @@ namespace Illustrious
                 var opCode = instruction.OpCode;
                 if (opCode.FlowControl == FlowControl.Branch || opCode.FlowControl == FlowControl.Cond_Branch)
                 {
-                    this.AddBranch(instruction);
+                    this.branches.Add(instruction);
                 }
             }
         }
