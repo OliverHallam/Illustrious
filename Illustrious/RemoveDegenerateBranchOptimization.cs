@@ -24,7 +24,7 @@ namespace Illustrious
             // TODO: currently if an optimization removes an instruction between a branch and its
             // target, this will not trigger, since the target instruction will be the one after the
             // branch.
-            //   This can be solbed by adding a property to the optimization indicating how many
+            //   This can be solved by adding a property to the optimization indicating how many
             // instructions ahead can affect its application.
             var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
