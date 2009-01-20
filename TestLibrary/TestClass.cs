@@ -13,7 +13,7 @@ namespace TestLibrary
 
         public static void FunctionCall()
         {
-            Console.Write("Hello");
+            Console.WriteLine("Hello");
         }
 
         public static void Loop()
@@ -45,7 +45,7 @@ namespace TestLibrary
         {
             Noop();
             FunctionCall();
-            //Loop();
+            Loop();
             Branch();
         }
     }
