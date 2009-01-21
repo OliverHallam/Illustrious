@@ -83,14 +83,17 @@ namespace Illustrious
         /// <param name="method">The method to inline.</param>
         private static void InlineMethod(OptimizationWorker worker, MethodDefinition method)
         {
-            // TODO: patch up copied br instructions.
             worker.Optimize(method);
-            worker.DeleteInstruction();
+
+            // replace the call with a nop in order to preserve branches to this call.
+            worker.ReplaceInstruction(worker.CilWorker.Create(OpCodes.Nop));
 
             var instructions = method.Body.Instructions;
             var instructionCount = instructions.Count;
             if (instructionCount == 0)
             {
+                // TODO: can this happen?
+                // do all methods end with a ret instruction?
                 return;
             }
 
@@ -108,48 +111,74 @@ namespace Illustrious
                 worker.AddLocalVariable(variable);
             }
 
-            worker.InsertInstruction(instruction);
-            for (var i = 1; i < instructionCount; i++)
+            // TODO: try to avoid this extra dictionary.
+            
+            // This mapping maps an instruction to the inlined version.  This is required in order to
+            // patch up backwards branch instructions to reference an instruction in the current method.
+            var copiedInstructions = new Dictionary<Instruction, Instruction>();
+
+            for (var i = 0; i < instructionCount; i++)
             {
                 var currentInstruction = instructions[i];
-
                 int location;
+
+                Instruction newInstruction;
+
                 if (currentInstruction.OpCode.FlowControl == FlowControl.Return)
                 {
                     // return instructions now just move execution to the instruction after the call
                     
                     // TODO: create best form of br instruction
-                    var branch = worker.CilWorker.Create(OpCodes.Br, worker.NextInstruction);
-                    worker.InsertInstruction(branch);
+                    newInstruction = worker.CilWorker.Create(OpCodes.Br, worker.NextInstruction);
+                }
+                else if (currentInstruction.OpCode.FlowControl == FlowControl.Branch ||
+                    currentInstruction.OpCode.FlowControl == FlowControl.Cond_Branch)
+                {
+                    // if we are jumping to an earlier instruction in the method, then create a jump
+                    // to the cloned version.
+                    var target = (Instruction) currentInstruction.Operand;
+                    
+                    Instruction inlinedTarget;
+                    if (!copiedInstructions.TryGetValue(target, out inlinedTarget))
+                    {
+                        inlinedTarget = target;
+                    }
+
+                    // TODO: if this is a short branch this may need converting to a long branch
+                    // as for example "ret" instructions may have been converted to branches in
+                    // the intervening space.
+                    newInstruction = worker.CilWorker.Create(currentInstruction.OpCode, inlinedTarget);
                 }
                 else if (currentInstruction.IsLdloc(out location))
                 {
                     var variable = variables[location];
 
                     // TODO: create the best form of ldloc instruction
-                    var ldloc = worker.CilWorker.Create(OpCodes.Ldloc, variable);
-                    worker.InsertInstruction(ldloc);
+                    newInstruction = worker.CilWorker.Create(OpCodes.Ldloc, variable);
                 }
                 else if (currentInstruction.IsLdloca(out location))
                 {
                     var variable = variables[location];
 
                     // TODO: create the best form of ldloca instruction
-                    var ldloca = worker.CilWorker.Create(OpCodes.Ldloca, variable);
-                    worker.InsertInstruction(ldloca);
+                    newInstruction = worker.CilWorker.Create(OpCodes.Ldloca, variable);
                 }
                 else if (currentInstruction.IsStloc(out location))
                 {
                     var variable = variables[location];
 
                     // TODO: create the best form of ldloca instruction
-                    var stloc = worker.CilWorker.Create(OpCodes.Stloc, variable);
-                    worker.InsertInstruction(stloc);
+                    newInstruction = worker.CilWorker.Create(OpCodes.Stloc, variable);
                 }
                 else
                 {
-                    worker.InsertInstruction(currentInstruction);
+                    newInstruction = worker.CopyInstruction(currentInstruction);
                 }
+
+                worker.InsertInstruction(newInstruction);
+                
+                copiedInstructions.Add(currentInstruction, newInstruction);
+                worker.RetargetBranches(currentInstruction, newInstruction);
             }
         }
     }
