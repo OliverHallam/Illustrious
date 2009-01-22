@@ -1,11 +1,11 @@
 ﻿//------------------------------------------------------------------------------------------------- 
-// <copyright file="InlineFunctionCallOptimization.cs" company="Oliver Hallam">
+// <copyright file="InlineFunctionCall.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the InlineFunctionCallOptimization type.</summary>
+// <summary>Defines the InlineFunctionCall type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Illustrious
+namespace Illustrious.Optimizations
 {
     using System.Collections.Generic;
     using Mono.Cecil;
@@ -14,7 +14,7 @@ namespace Illustrious
     /// <summary>
     /// Inlines function calls.
     /// </summary>
-    public class InlineFunctionCallOptimization : Optimization
+    public class InlineFunctionCall : Optimization
     {
         /// <summary>
         /// The configuration.
@@ -27,10 +27,10 @@ namespace Illustrious
         private readonly Dictionary<MethodDefinition, bool> shouldInline = new Dictionary<MethodDefinition, bool>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InlineFunctionCallOptimization"/> class.
+        /// Initializes a new instance of the <see cref="InlineFunctionCall"/> class.
         /// </summary>
         /// <param name="configuration">The configuration.</param>
-        public InlineFunctionCallOptimization(OptimizationConfiguration configuration)
+        public InlineFunctionCall(OptimizationConfiguration configuration)
         {
             this.configuration = configuration;
         }
@@ -132,7 +132,7 @@ namespace Illustrious
                     newInstruction = worker.CilWorker.Create(OpCodes.Br, worker.NextInstruction);
                 }
                 else if (currentInstruction.OpCode.FlowControl == FlowControl.Branch ||
-                    currentInstruction.OpCode.FlowControl == FlowControl.Cond_Branch)
+                         currentInstruction.OpCode.FlowControl == FlowControl.Cond_Branch)
                 {
                     // if we are jumping to an earlier instruction in the method, then create a jump
                     // to the cloned version.

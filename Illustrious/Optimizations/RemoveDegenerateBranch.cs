@@ -1,11 +1,11 @@
 ﻿//------------------------------------------------------------------------------------------------- 
-// <copyright file="RemoveDegenerateBranchOptimization.cs" company="Oliver Hallam">
+// <copyright file="RemoveDegenerateBranch.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the RemoveDegenerateBranchOptimization type.</summary>
+// <summary>Defines the RemoveDegenerateBranch type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Illustrious
+namespace Illustrious.Optimizations
 {
     using Mono.Cecil.Cil;
 
@@ -13,7 +13,7 @@ namespace Illustrious
     /// Optimization that removes branch or conditional branch instructions that jump to the 
     /// following instruction.
     /// </summary>
-    public class RemoveDegenerateBranchOptimization : Optimization
+    public class RemoveDegenerateBranch : Optimization
     {
         /// <summary>
         /// Performs the optimization starting at the current instruction.
@@ -40,4 +40,3 @@ namespace Illustrious
         }
     }
 }
-

@@ -55,15 +55,15 @@
     <Compile Include="BranchManager.cs" />
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="OptimizationConfiguration.cs" />
-    <Compile Include="InlineFunctionCallOptimization.cs" />
+    <Compile Include="Optimizations\InlineFunctionCall.cs" />
     <Compile Include="InstructionExtensions.cs" />
     <Compile Include="Optimization.cs" />
     <Compile Include="OptimizationWorker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Optimizer.cs" />
-    <Compile Include="RemoveDegenerateBranchOptimization.cs" />
-    <Compile Include="RemoveNopOptimization.cs" />
+    <Compile Include="Optimizations\RemoveDegenerateBranch.cs" />
+    <Compile Include="Optimizations\RemoveNop.cs" />
     <Compile Include="Visitor.cs" />
   </ItemGroup>
   <ItemGroup>

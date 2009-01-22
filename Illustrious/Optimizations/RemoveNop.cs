@@ -1,18 +1,18 @@
 ﻿//------------------------------------------------------------------------------------------------- 
-// <copyright file="RemoveDegenerateBranchOptimization.cs" company="Oliver Hallam">
+// <copyright file="RemoveNop.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the RemoveDegenerateBranchOptimization type.</summary>
+// <summary>Defines the RemoveNop type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-namespace Illustrious
+namespace Illustrious.Optimizations
 {
     using Mono.Cecil.Cil;
 
     /// <summary>
     /// Optimization that removes the <c>nop</c> instruction.
     /// </summary>
-    public class RemoveNopOptimization : Optimization
+    public class RemoveNop : Optimization
     {
         /// <summary>
         /// Performs the optimization starting at the current instruction.
@@ -29,4 +29,3 @@ namespace Illustrious
         }
     }
 }
-

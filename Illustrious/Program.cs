@@ -5,12 +5,12 @@
 // <summary>Defines the Program type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-using System.Globalization;
-
 namespace Illustrious
 {
+    using System.Globalization;
     using Mono.Cecil;
-
+    using Optimizations;
+    
     /// <summary>
     /// Contains the application entry point.
     /// </summary>
@@ -29,9 +29,9 @@ namespace Illustrious
 
             var configuration = new OptimizationConfiguration();
 
-            var inlineFunctionCall = new InlineFunctionCallOptimization(configuration);
-            var removeDegenerateBranch = new RemoveDegenerateBranchOptimization();
-            var removeNop = new RemoveNopOptimization();
+            var inlineFunctionCall = new InlineFunctionCall(configuration);
+            var removeDegenerateBranch = new RemoveDegenerateBranch();
+            var removeNop = new RemoveNop();
 
             var rewriter = new Optimizer(inlineFunctionCall, removeDegenerateBranch, removeNop);
             rewriter.Visit(assembly);
