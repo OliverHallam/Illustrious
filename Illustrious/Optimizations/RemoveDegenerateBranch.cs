@@ -2,7 +2,7 @@
 // <copyright file="RemoveDegenerateBranch.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the RemoveDegenerateBranch type.</summary>
+// <summary>Defines the RemoveDegenerateBranch optimization.</summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace Illustrious.Optimizations

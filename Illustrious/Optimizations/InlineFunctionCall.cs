@@ -2,7 +2,7 @@
 // <copyright file="InlineFunctionCall.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the InlineFunctionCall type.</summary>
+// <summary>Defines the InlineFunctionCall optimization.</summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace Illustrious.Optimizations

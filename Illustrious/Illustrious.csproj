@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BranchManager.cs" />
+    <Compile Include="Optimizations\RetargetDoubleBranch.cs" />
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="OptimizationConfiguration.cs" />
     <Compile Include="Optimizations\InlineFunctionCall.cs" />

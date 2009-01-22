@@ -1,8 +1,8 @@
 ﻿//------------------------------------------------------------------------------------------------- 
-// <copyright file="RemoveNop.cs" company="Oliver Hallam">
+// <copyright file="RetargetDoubleBranch.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the RemoveNop optimization.</summary>
+// <summary>Defines the RetargetDoubleBranch optimization.</summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace Illustrious.Optimizations
@@ -10,9 +10,10 @@ namespace Illustrious.Optimizations
     using Mono.Cecil.Cil;
 
     /// <summary>
-    /// Optimization that removes the <c>nop</c> instruction.
+    /// Finds a branch or conditional branch instruction whose operand is a branch, and retargets
+    /// it to jump directly.
     /// </summary>
-    public class RemoveNop : Optimization
+    public class RetargetDoubleBranch : Optimization
     {
         /// <summary>
         /// Performs the optimization starting at the current instruction.
@@ -22,9 +23,14 @@ namespace Illustrious.Optimizations
         {
             var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
-            if (opCode.Code == Code.Nop)
+            if (opCode.FlowControl == FlowControl.Branch ||
+                opCode.FlowControl == FlowControl.Cond_Branch)
             {
-                worker.DeleteInstruction();
+                var target = (Instruction)instruction.Operand;
+                if (target.OpCode.FlowControl == FlowControl.Branch)
+                {
+                    instruction.Operand = target.Operand;
+                }
             }
         }
     }
