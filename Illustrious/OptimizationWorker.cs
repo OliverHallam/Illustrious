@@ -5,6 +5,8 @@
 // <summary>Defines the OptimizationWorker type.</summary>
 //-------------------------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Illustrious
 {
     using System;
@@ -44,7 +46,7 @@ namespace Illustrious
         /// <summary>
         /// The branches in the current method.
         /// </summary>
-        private BranchCollection branches;
+        private BranchManager branches;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptimizationWorker"/> class.
@@ -55,9 +57,6 @@ namespace Illustrious
         {
             this.optimizer = optimizer;
             this.methodBody = methodBody;
-            this.currentInstruction = null;
-            this.targetInstruction = null;
-            this.nextInstruction = null;
         }
 
         /// <summary>
@@ -124,7 +123,7 @@ namespace Illustrious
         /// Gets the branch sources.
         /// </summary>
         /// <value>The branch sources.</value>
-        private BranchCollection Branches
+        private BranchManager Branches
         {
             get
             {
@@ -152,6 +151,7 @@ namespace Illustrious
         /// </summary>
         /// <param name="instruction">The instruction to copy.</param>
         /// <returns>A copy of <paramref name="instruction"/>.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily", Justification = "False positive")]
         public Instruction CopyInstruction(Instruction instruction)
         {
             var opCode = instruction.OpCode;
@@ -430,7 +430,7 @@ namespace Illustrious
         /// </summary>
         private void FindBranches()
         {
-            this.branches = new BranchCollection();
+            this.branches = new BranchManager();
             
             var instructions = this.methodBody.Instructions;
             var instructionCount = instructions.Count;

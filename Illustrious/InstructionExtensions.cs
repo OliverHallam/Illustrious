@@ -5,6 +5,8 @@
 // <summary>Defines the InstructionExtensions type.</summary>
 //-------------------------------------------------------------------------------------------------
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Illustrious
 {
     using Mono.Cecil.Cil;
@@ -22,6 +24,7 @@ namespace Illustrious
         /// <returns>
         /// <c>true</c> if the specified instruction is a <c>ldloc</c> instruction; otherwise, <c>false</c>.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#", Justification = "Matches the TryParse pattern")]
         public static bool IsLdloc(this Instruction instruction, out int location)
         {
             switch (instruction.OpCode.Code)
@@ -57,13 +60,14 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Determines whether the specified instruction is a <c>ldloc</c> instruction.
+        /// Determines whether the specified instruction is a <c>ldloca</c> instruction.
         /// </summary>
         /// <param name="instruction">The instruction.</param>
-        /// <param name="location">The target location of the <c>ldloc</c> instruction.</param>
+        /// <param name="location">The target location of the <c>ldloca</c> instruction.</param>
         /// <returns>
-        /// <c>true</c> if the specified instruction is a <c>ldloc</c> instruction; otherwise, <c>false</c>.
+        /// <c>true</c> if the specified instruction is a <c>ldloca</c> instruction; otherwise, <c>false</c>.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#", Justification = "Matches the TryParse pattern")]
         public static bool IsLdloca(this Instruction instruction, out int location)
         {
             switch (instruction.OpCode.Code)
@@ -90,6 +94,7 @@ namespace Illustrious
         /// <returns>
         /// <c>true</c> if the specified instruction is a <c>stloc</c> instruction; otherwise, <c>false</c>.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#", Justification = "Matches the TryParse pattern")]
         public static bool IsStloc(this Instruction instruction, out int location)
         {
             switch (instruction.OpCode.Code)

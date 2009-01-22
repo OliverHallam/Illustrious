@@ -1,8 +1,8 @@
 ﻿//------------------------------------------------------------------------------------------------- 
-// <copyright file="BranchCollection.cs" company="Oliver Hallam">
+// <copyright file="BranchManager.cs" company="Oliver Hallam">
 // Copyright (c) Oliver Hallam.  All rights reserved.
 // </copyright>
-// <summary>Defines the BranchCollection type.</summary>
+// <summary>Defines the BranchManager type.</summary>
 //-------------------------------------------------------------------------------------------------
 
 namespace Illustrious
@@ -12,9 +12,9 @@ namespace Illustrious
     using Mono.Cecil.Cil;
 
     /// <summary>
-    /// A collection of branch instructions indexed by their target.
+    /// A manager for branch instructions that allows for branch retargeting.
     /// </summary>
-    public class BranchCollection
+    public class BranchManager
     {
         /// <summary>
         /// The mapping from branch target to branch instruction.

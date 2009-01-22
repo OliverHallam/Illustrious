@@ -5,6 +5,8 @@
 // <summary>Defines the Program type.</summary>
 //-------------------------------------------------------------------------------------------------
 
+using System.Globalization;
+
 namespace Illustrious
 {
     using Mono.Cecil;
@@ -12,7 +14,7 @@ namespace Illustrious
     /// <summary>
     /// Contains the application entry point.
     /// </summary>
-    public class Program
+    public static class Program
     {
         /// <summary>
         /// The application entry point.
@@ -25,7 +27,7 @@ namespace Illustrious
 
             var assembly = AssemblyFactory.GetAssembly(assemblyPath);
 
-            var configuration = new Configuration();
+            var configuration = new OptimizationConfiguration();
 
             var inlineFunctionCall = new InlineFunctionCallOptimization(configuration);
             var removeDegenerateBranch = new RemoveDegenerateBranchOptimization();
@@ -39,6 +41,7 @@ namespace Illustrious
 
             // TODO: accept output file name from command line
             var outputFileName = string.Format(
+                CultureInfo.InvariantCulture,
                 "{0}.inlined.{1}",
                 assemblyName,
                 assemblyKind == AssemblyKind.Dll ? "dll" : "exe");

@@ -19,7 +19,7 @@ namespace Illustrious
         /// <summary>
         /// The configuration.
         /// </summary>
-        private readonly Configuration configuration;
+        private readonly OptimizationConfiguration configuration;
 
         /// <summary>
         /// A cache of the value indicating whether a method should be inlined.
@@ -30,7 +30,7 @@ namespace Illustrious
         /// Initializes a new instance of the <see cref="InlineFunctionCallOptimization"/> class.
         /// </summary>
         /// <param name="configuration">The configuration.</param>
-        public InlineFunctionCallOptimization(Configuration configuration)
+        public InlineFunctionCallOptimization(OptimizationConfiguration configuration)
         {
             this.configuration = configuration;
         }

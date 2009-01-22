@@ -12,6 +12,8 @@
     <AssemblyName>Illustrious</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Illustrious.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,8 +52,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BranchCollection.cs" />
-    <Compile Include="Configuration.cs" />
+    <Compile Include="BranchManager.cs" />
+    <Compile Include="Properties\GlobalSuppressions.cs" />
+    <Compile Include="OptimizationConfiguration.cs" />
     <Compile Include="InlineFunctionCallOptimization.cs" />
     <Compile Include="InstructionExtensions.cs" />
     <Compile Include="Optimization.cs" />
@@ -62,6 +65,14 @@
     <Compile Include="RemoveDegenerateBranchOptimization.cs" />
     <Compile Include="RemoveNopOptimization.cs" />
     <Compile Include="Visitor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDictionary Include="..\CustomDictionary.xml">
+      <Link>Properties\CustomDictionary.xml</Link>
+    </CodeAnalysisDictionary>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Illustrious.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

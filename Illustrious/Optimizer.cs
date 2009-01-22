@@ -38,17 +38,17 @@ namespace Illustrious
         /// <summary>
         /// Visits the specified method.
         /// </summary>
-        /// <param name="method">The method to visit.</param>
-        public override void Visit(MethodDefinition method)
+        /// <param name="methodDefinition">The method to visit.</param>
+        public override void Visit(MethodDefinition methodDefinition)
         {
-            if (this.visitedMethods.Contains(method))
+            if (this.visitedMethods.Contains(methodDefinition))
             {
                 return;
             }
 
-            this.visitedMethods.Add(method);
+            this.visitedMethods.Add(methodDefinition);
 
-            var body = method.Body;
+            var body = methodDefinition.Body;
             if (body == null)
             {
                 return;

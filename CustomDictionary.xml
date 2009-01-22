@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Dictionary>
+  <Words>
+    <Recognized>
+      <Word>Inliner</Word>
+      <Word>Inline</Word>
+      <Word>Analyzer</Word>
+      <Word>inlining</Word>
+      <Word>Retarget</Word>
+      <Word>Inlines</Word>
+      <Word>inlined</Word>
+      <Word>retargeting</Word>
+      <Word>struct</Word>
+      <Word>Ldloc</Word>
+      <Word>Ldloca</Word>
+      <Word>Stloc</Word>
+      <Word>Cil</Word>
+    </Recognized>
+  </Words>
+</Dictionary>

@@ -5,6 +5,7 @@
 // <summary>Defines the  type.</summary>
 //-------------------------------------------------------------------------------------------------
 
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 

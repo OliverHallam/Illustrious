@@ -14,12 +14,12 @@ namespace Illustrious
     public class Visitor
     {
         /// <summary>
-        /// Visits the specified assembly.
+        /// Visits the specified assembly definition.
         /// </summary>
-        /// <param name="assembly">The assembly to visit.</param>
-        public virtual void Visit(AssemblyDefinition assembly)
+        /// <param name="assemblyDefinition">The assembly definition to visit.</param>
+        public virtual void Visit(AssemblyDefinition assemblyDefinition)
         {
-            var modules = assembly.Modules;
+            var modules = assemblyDefinition.Modules;
             var moduleCount = modules.Count;
             for (var i = 0; i < moduleCount; i++)
             {
@@ -29,12 +29,12 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Visits the specified module.
+        /// Visits the specified module definition.
         /// </summary>
-        /// <param name="module">The module to visit.</param>
-        public virtual void Visit(ModuleDefinition module)
+        /// <param name="moduleDefinition">The module definition to visit.</param>
+        public virtual void Visit(ModuleDefinition moduleDefinition)
         {
-            var types = module.Types;
+            var types = moduleDefinition.Types;
             var typeCount = types.Count;
             for (var i = 0; i < typeCount; i++)
             {
@@ -44,12 +44,12 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Visits the specified type.
+        /// Visits the specified type definition.
         /// </summary>
-        /// <param name="type">The type to visit.</param>
-        public virtual void Visit(TypeDefinition type)
+        /// <param name="typeDefinition">The type definition to visit.</param>
+        public virtual void Visit(TypeDefinition typeDefinition)
         {
-            var nestedTypes = type.NestedTypes;
+            var nestedTypes = typeDefinition.NestedTypes;
             var typeCount = nestedTypes.Count;
             for (var i = 0; i < typeCount; i++)
             {
@@ -57,7 +57,7 @@ namespace Illustrious
                 this.Visit(nestedType);
             }
 
-            var constructors = type.Constructors;
+            var constructors = typeDefinition.Constructors;
             var constructorCount = constructors.Count;
             for (var i = 0; i < constructorCount; i++)
             {
@@ -65,7 +65,7 @@ namespace Illustrious
                 this.Visit(constructor);
             }
 
-            var methods = type.Methods;
+            var methods = typeDefinition.Methods;
             var methodCount = methods.Count;
             for (var i = 0; i < methodCount; i++)
             {
@@ -73,7 +73,7 @@ namespace Illustrious
                 this.Visit(method);
             }
 
-            var properties = type.Properties;
+            var properties = typeDefinition.Properties;
             var propertyCount = properties.Count;
             for (var i = 0; i < propertyCount; i++)
             {
@@ -83,26 +83,26 @@ namespace Illustrious
         }
         
         /// <summary>
-        /// Visits the specified method.
+        /// Visits the specified method definition.
         /// </summary>
-        /// <param name="method">The method to visit.</param>
-        public virtual void Visit(MethodDefinition method)
+        /// <param name="methodDefinition">The method definition to visit.</param>
+        public virtual void Visit(MethodDefinition methodDefinition)
         {
         }
 
         /// <summary>
-        /// Visits the specified property.
+        /// Visits the specified property definition.
         /// </summary>
-        /// <param name="property">The property to visit.</param>
-        public virtual void Visit(PropertyDefinition property)
+        /// <param name="propertyDefinition">The property definition to visit.</param>
+        public virtual void Visit(PropertyDefinition propertyDefinition)
         {
-            var getMethod = property.GetMethod;
+            var getMethod = propertyDefinition.GetMethod;
             if (getMethod != null)
             {
                 this.Visit(getMethod);
             }
 
-            var setMethod = property.SetMethod;
+            var setMethod = propertyDefinition.SetMethod;
             if (setMethod != null)
             {
                 this.Visit(setMethod);
