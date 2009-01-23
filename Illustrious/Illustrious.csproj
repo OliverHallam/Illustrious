@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="BranchManager.cs" />
     <Compile Include="Optimizations\BranchToReturn.cs" />
+    <Compile Include="Optimizations\RemoveDeadCode.cs" />
     <Compile Include="Optimizations\RetargetDoubleBranch.cs" />
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="OptimizationConfiguration.cs" />

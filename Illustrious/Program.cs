@@ -33,6 +33,7 @@ namespace Illustrious
             var inlineFunctionCall = new InlineFunctionCall(configuration);
             var removeDegenerateBranch = new RemoveDegenerateBranch();
             var retargetDoubleBranch = new RetargetDoubleBranch();
+            var removeDeadCode = new RemoveDeadCode();
             var removeNop = new RemoveNop();
 
             var rewriter = new Optimizer(
@@ -40,6 +41,7 @@ namespace Illustrious
                 inlineFunctionCall, 
                 removeDegenerateBranch, 
                 retargetDoubleBranch, 
+                removeDeadCode,
                 removeNop);
 
             rewriter.Visit(assembly);

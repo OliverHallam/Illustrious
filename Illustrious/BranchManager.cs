@@ -5,6 +5,8 @@
 // <summary>Defines the BranchManager type.</summary>
 //-------------------------------------------------------------------------------------------------
 
+using System.Collections;
+
 namespace Illustrious
 {
     using System;
@@ -70,6 +72,22 @@ namespace Illustrious
             {
                 sources.Remove(instruction);
             }
+        }
+
+        /// <summary>
+        /// Returns the set of branches that target the specified instruction.
+        /// </summary>
+        /// <param name="target">The target instruction.</param>
+        /// <returns>The set of branches that target the specified instruction.</returns>
+        public IEnumerable<Instruction> FindBranches(Instruction target)
+        {
+            List<Instruction> sources;
+            if (!this.branchSources.TryGetValue(target, out sources))
+            {
+                return new Instruction[0];
+            }
+
+            return sources;
         }
 
         /// <summary>

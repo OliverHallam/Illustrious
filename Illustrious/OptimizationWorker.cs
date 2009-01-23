@@ -5,11 +5,12 @@
 // <summary>Defines the OptimizationWorker type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace Illustrious
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using Mono.Cecil;
     using Mono.Cecil.Cil;
 
@@ -277,7 +278,7 @@ namespace Illustrious
             var followingInstruction = instruction.Next;
             if (followingInstruction == null)
             {
-                throw new NotImplementedException("Convert branch to ret.");
+                // TODO: convert branches to ret?
             }
 
             this.Branches.Retarget(instruction, followingInstruction);
@@ -379,6 +380,35 @@ namespace Illustrious
         public void RetargetBranches(Instruction oldTarget, Instruction newTarget)
         {
             this.Branches.Retarget(oldTarget, newTarget);
+        }
+
+        /// <summary>
+        /// Returns a list of all the instruction in the method that may move execution to the specified instruction.
+        /// </summary>
+        /// <param name="target">The target instruction.</param>
+        /// <returns>The set of instructions that may transfer execution </returns>
+        public ICollection<Instruction> SourceInstructions(Instruction target)
+        {
+            var sources = new List<Instruction>();
+
+            var previous = target.Previous;
+            if (previous != null)
+            {
+                var previousOpCode = previous.OpCode;
+                var previousFlowControl = previousOpCode.FlowControl;
+
+                // NOTE: if previous is a (conditional) branch to current this will be handled with branches
+                if (previousFlowControl != FlowControl.Branch &&
+                    previousFlowControl != FlowControl.Return &&
+                    previousFlowControl != FlowControl.Throw &&
+                    (previousFlowControl != FlowControl.Cond_Branch || previous.Operand != target))
+                {
+                    sources.Add(previous);
+                }
+            }
+
+            sources.AddRange(this.Branches.FindBranches(target));
+            return sources;
         }
 
         /// <summary>
