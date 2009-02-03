@@ -15,9 +15,10 @@ namespace Illustrious
     public abstract class Optimization
     {
         /// <summary>
-        /// Performs the optimization starting at the current instruction.
+        /// Performs the optimization starting at the specified instruction.
         /// </summary>
+        /// <param name="instruction">The instruction to target.</param>
         /// <param name="worker">The worker for optimization actions.</param>
-        public abstract void OptimizeInstruction(OptimizationWorker worker);
+        public abstract void OptimizeInstruction(Instruction instruction, OptimizationWorker worker);
     }
 }

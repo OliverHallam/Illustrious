@@ -18,15 +18,15 @@ namespace Illustrious.Optimizations
         /// <summary>
         /// Performs the optimization starting at the current instruction.
         /// </summary>
+        /// <param name="instruction">The instruction to target.</param>
         /// <param name="worker">The worker for optimization actions.</param>
-        public override void OptimizeInstruction(OptimizationWorker worker)
+        public override void OptimizeInstruction(Instruction instruction, OptimizationWorker worker)
         {
             // TODO: currently if an optimization removes an instruction between a branch and its
             // target, this will not trigger, since the target instruction will be the one after the
             // branch.
             //   This can be solved by adding a property to the optimization indicating how many
             // instructions ahead can affect its application.
-            var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
             if (opCode.FlowControl == FlowControl.Branch ||
                 opCode.FlowControl == FlowControl.Cond_Branch)
@@ -34,7 +34,7 @@ namespace Illustrious.Optimizations
                 var target = instruction.Operand as Instruction;
                 if (target == instruction.Next)
                 {
-                    worker.DeleteInstruction();
+                    worker.DeleteInstruction(instruction);
                 }
             }
         }

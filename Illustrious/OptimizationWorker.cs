@@ -5,11 +5,10 @@
 // <summary>Defines the OptimizationWorker type.</summary>
 //-------------------------------------------------------------------------------------------------
 
-using System.Collections.Generic;
-
 namespace Illustrious
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using Mono.Cecil;
     using Mono.Cecil.Cil;
@@ -30,21 +29,6 @@ namespace Illustrious
         private readonly Optimizer optimizer;
 
         /// <summary>
-        /// The instruction that is currently being optimized.
-        /// </summary>
-        private Instruction currentInstruction;
-
-        /// <summary>
-        /// The instruction following any rewritings the optimization has performed.
-        /// </summary>
-        private Instruction nextInstruction;
-
-        /// <summary>
-        /// The instruction being targeted for optimization.
-        /// </summary>
-        private Instruction targetInstruction;
-
-        /// <summary>
         /// The branches in the current method.
         /// </summary>
         private BranchManager branches;
@@ -60,28 +44,15 @@ namespace Illustrious
             this.methodBody = methodBody;
         }
 
-        /// <summary>
-        /// Gets the target instruction.
-        /// </summary>
-        /// <value>The target instruction.</value>
-        public Instruction TargetInstruction
-        {
-            get
-            {
-                return this.targetInstruction;
-            }
-        }
 
         /// <summary>
-        /// Gets the instruction following any rewriting performed.
+        /// Gets or sets a value indicating whether an rewriting has been performed.
         /// </summary>
-        /// <value>The instruction following any rewriting performed.</value>
-        public Instruction NextInstruction
+        /// <value><see langword="true" /> if a rewriting has been performed; otherwise, <see langword="false"/>.</value>
+        public bool WasOptimized
         {
-            get
-            {
-                return this.nextInstruction;
-            }
+            get;
+            set;
         }
 
         /// <summary>
@@ -104,19 +75,6 @@ namespace Illustrious
             get
             {
                 return this.methodBody.Variables.Count;
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether any rewritings were performed since the last call to <see cref="NextInstruction"/>.
-        /// </summary>
-        /// <value><c>true</c> if rewritings have been performed; otherwise, <c>false</c>.</value>
-        public bool WasOptimized
-        {
-            get
-            {
-                return this.targetInstruction != this.currentInstruction ||
-                       this.nextInstruction != this.currentInstruction.Next;
             }
         }
 
@@ -225,25 +183,6 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Deletes the current instruction
-        /// </summary>
-        /// <exception cref="NotSupportedException">The worker has no current instruction.</exception>
-        /// <remarks>
-        /// Any branch or conditional branch instructions targeting the current instruction will be modified
-        /// to target the instruction following it.
-        /// </remarks>
-        public void DeleteInstruction()
-        {
-            if (this.currentInstruction == null)
-            {
-                throw new NotSupportedException();
-            }
-
-            // TODO: should this be target instruction?
-            this.DeleteInstruction(this.currentInstruction);
-        }
-
-        /// <summary>
         /// Deletes an instruction.
         /// </summary>
         /// <param name="instruction">The instruction.</param>
@@ -254,19 +193,11 @@ namespace Illustrious
         /// </remarks>
         public void DeleteInstruction(Instruction instruction)
         {
+            this.WasOptimized = true;
+
             if (instruction == null)
             {
                 throw new ArgumentNullException("instruction");
-            }
-
-            if (instruction == this.nextInstruction)
-            {
-                this.nextInstruction = this.nextInstruction.Next;
-            }
-
-            if (instruction == this.currentInstruction)
-            {
-                this.currentInstruction = this.currentInstruction.Previous;
             }
 
             if (instruction.OpCode.FlowControl == FlowControl.Branch ||
@@ -287,26 +218,6 @@ namespace Illustrious
         }
 
         /// <summary>
-        /// Replaces the current instruction with the given instruction.
-        /// </summary>
-        /// <param name="replacement">The replacement.</param>
-        /// <exception cref="NotSupportedException">The worker has no current instruction.</exception>
-        /// <remarks>
-        /// Any branch or conditional branch instructions targeting the current instruction will be modified
-        /// to target <c>replacement</c>.
-        /// </remarks>
-        public void ReplaceInstruction(Instruction replacement)
-        {
-            if (this.currentInstruction == null)
-            {
-                throw new NotSupportedException();
-            }
-            
-            // TODO: should this be target instruction?
-            this.ReplaceInstruction(this.currentInstruction, replacement);
-        }
-
-        /// <summary>
         /// Replaces the given instruction with another instruction.
         /// </summary>
         /// <param name="instruction">The instruction to replace</param>
@@ -318,19 +229,11 @@ namespace Illustrious
         /// </remarks>
         public void ReplaceInstruction(Instruction instruction, Instruction replacement)
         {
+            this.WasOptimized = true;
+
             if (instruction == null)
             {
                 throw new ArgumentNullException("instruction");
-            }
-
-            if (instruction == this.nextInstruction)
-            {
-                this.nextInstruction = this.nextInstruction.Next;
-            }
-
-            if (instruction == this.currentInstruction)
-            {
-                this.currentInstruction = this.currentInstruction.Previous;
             }
 
             if (instruction.OpCode.FlowControl == FlowControl.Branch ||
@@ -353,13 +256,11 @@ namespace Illustrious
         /// <summary>
         /// Inserts an instruction into the IL stream, following the target instruction and any other instructions added.
         /// </summary>
+        /// <param name="target">The target to insert before.</param>
         /// <param name="instruction">The instruction to insert.</param>
-        public void InsertInstruction(Instruction instruction)
+        public void InsertBefore(Instruction target, Instruction instruction)
         {
-            if (this.nextInstruction == null)
-            {
-                throw new NotImplementedException("inserting to the end of a stream");
-            }
+            this.WasOptimized = true;
 
             // if we are adding a branch instruction then update our cache.
             var opCode = instruction.OpCode;
@@ -367,8 +268,16 @@ namespace Illustrious
             {
                 this.Branches.Add(instruction);
             }
-            
-            this.CilWorker.InsertBefore(this.nextInstruction, instruction);
+
+            if (target == null)
+            {
+                // insert to the end of the stream.
+                this.CilWorker.Append(instruction);
+            }
+            else
+            {
+                this.CilWorker.InsertBefore(target, instruction);
+            }
         }
 
         /// <summary>
@@ -409,41 +318,6 @@ namespace Illustrious
 
             sources.AddRange(this.Branches.FindBranches(target));
             return sources;
-        }
-
-        /// <summary>
-        /// Moves the worker to the next instruction.
-        /// </summary>
-        /// <returns>
-        /// <see langword="true"/> if the worker was successfully moved to the next instruction;
-        /// <see langword="false"/> if the worker reached the end of the method.
-        /// </returns>
-        public bool MoveNext()
-        {
-            if (this.currentInstruction == null)
-            {
-                if (this.methodBody.Instructions.Count != 0)
-                {
-                    this.currentInstruction = this.methodBody.Instructions[0];
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                this.currentInstruction = this.currentInstruction.Next;
-            
-                if (this.currentInstruction == null)
-                {
-                    return false;
-                }
-            }
-
-            this.targetInstruction = this.currentInstruction;
-            this.nextInstruction = this.currentInstruction.Next;
-            return true;
         }
 
         /// <summary>

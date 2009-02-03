@@ -38,14 +38,14 @@ namespace Illustrious.Optimizations
         /// <summary>
         /// Performs the optimization starting at the current instruction.
         /// </summary>
+        /// <param name="instruction">The instruction to target.</param>
         /// <param name="worker">The worker for optimization actions.</param>
-        public override void OptimizeInstruction(OptimizationWorker worker)
+        public override void OptimizeInstruction(Instruction instruction, OptimizationWorker worker)
         {
             // TODO: allow arguments
             // TODO: allow return values
             // TODO: allow generic methods
             // TODO: allow non-static methods
-            var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
             if (opCode.FlowControl != FlowControl.Call)
             {
@@ -72,21 +72,28 @@ namespace Illustrious.Optimizations
 
             if (shouldInlineMethod)
             {
-                InlineMethod(worker, method);
+                InlineMethod(instruction, worker, method);
             }
         }
 
         /// <summary>
         /// Inlines the supplied method.
         /// </summary>
+        /// <param name="callInstruction">The call instruction.</param>
         /// <param name="worker">The worker to use to modify the caller, positioned at the call instruction.</param>
         /// <param name="method">The method to inline.</param>
-        private static void InlineMethod(OptimizationWorker worker, MethodDefinition method)
+        private static void InlineMethod(
+            Instruction callInstruction, 
+            OptimizationWorker worker, 
+            MethodDefinition method)
         {
             worker.Optimize(method);
 
             // replace the call with a nop in order to preserve branches to this call.
-            worker.ReplaceInstruction(worker.CilWorker.Create(OpCodes.Nop));
+            var nop = worker.CilWorker.Create(OpCodes.Nop);
+            worker.ReplaceInstruction(callInstruction, nop);
+
+            var nextInstruction = callInstruction.Next;
 
             var instructions = method.Body.Instructions;
             var instructionCount = instructions.Count;
@@ -129,7 +136,7 @@ namespace Illustrious.Optimizations
                     // return instructions now just move execution to the instruction after the call
                     
                     // TODO: create best form of br instruction
-                    newInstruction = worker.CilWorker.Create(OpCodes.Br, worker.NextInstruction);
+                    newInstruction = worker.CilWorker.Create(OpCodes.Br, nextInstruction);
                 }
                 else if (currentInstruction.OpCode.FlowControl == FlowControl.Branch ||
                          currentInstruction.OpCode.FlowControl == FlowControl.Cond_Branch)
@@ -175,7 +182,7 @@ namespace Illustrious.Optimizations
                     newInstruction = worker.CopyInstruction(currentInstruction);
                 }
 
-                worker.InsertInstruction(newInstruction);
+                worker.InsertBefore(nextInstruction, newInstruction);
                 
                 copiedInstructions.Add(currentInstruction, newInstruction);
                 worker.RetargetBranches(currentInstruction, newInstruction);

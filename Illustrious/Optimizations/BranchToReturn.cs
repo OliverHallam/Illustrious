@@ -18,10 +18,10 @@ namespace Illustrious.Optimizations
         /// <summary>
         /// Performs the optimization starting at the current instruction.
         /// </summary>
+        /// <param name="instruction">The instruction to target.</param>
         /// <param name="worker">The worker for optimization actions.</param>
-        public override void OptimizeInstruction(OptimizationWorker worker)
+        public override void OptimizeInstruction(Instruction instruction, OptimizationWorker worker)
         {
-            var instruction = worker.TargetInstruction;
             var opCode = instruction.OpCode;
             if (opCode.FlowControl == FlowControl.Branch)
             {
@@ -31,7 +31,7 @@ namespace Illustrious.Optimizations
                     targetOpCode.FlowControl == FlowControl.Throw)
                 {
                     var replacement = worker.CilWorker.Create(targetOpCode);
-                    worker.ReplaceInstruction(replacement);
+                    worker.ReplaceInstruction(instruction, replacement);
                 }
             }
         }

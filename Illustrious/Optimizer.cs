@@ -49,34 +49,53 @@ namespace Illustrious
             this.visitedMethods.Add(methodDefinition);
 
             var body = methodDefinition.Body;
-            if (body == null)
+            if (body == null || body.Instructions.Count == 0)
             {
                 return;
             }
 
             var worker = new OptimizationWorker(this, body);
-            while (worker.MoveNext())
+            var instruction = body.Instructions[0];
+            do
             {
-                this.ApplyOptimizations(worker);
+                var instructionBefore = instruction.Previous;
+
+                if (this.ApplyOptimizations(instruction, worker))
+                {
+                    instruction = instructionBefore;
+                    if (instruction == null)
+                    {
+                        instruction = body.Instructions[0];
+                        continue;
+                    }
+                }
+
+                instruction = instruction.Next;
             }
+            while (instruction != null);
         }
 
         /// <summary>
         /// Applies all optimizations to the specified instruction.
         /// </summary>
+        /// <param name="instruction">The instruction to optimize.</param>
         /// <param name="worker">The worker to apply optimizations on.</param>
-        private void ApplyOptimizations(OptimizationWorker worker)
+        /// <returns><see langword="true"/> if an optimization has been performed; <see langword="false" /> otherwise.</returns>
+        private bool ApplyOptimizations(Instruction instruction, OptimizationWorker worker)
         {
             var optimizationCount = this.optimizations.Length;
             for (var i = 0; i < optimizationCount; i++)
             {
                 var optimization = this.optimizations[i];
-                optimization.OptimizeInstruction(worker);
+                optimization.OptimizeInstruction(instruction, worker);
                 if (worker.WasOptimized)
                 {
-                    return;
+                    worker.WasOptimized = false;
+                    return true;
                 }
             }
+
+            return false;
         }
     }
 }
